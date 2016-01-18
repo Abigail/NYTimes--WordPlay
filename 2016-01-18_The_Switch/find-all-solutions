@@ -1,0 +1,56 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+#
+# http://wordplay.blogs.nytimes.com/2016/01/18/finkel-the-switch/
+#
+# Imagine a switch that changes all the addition signs in an
+# expression to multiplication signs, and all the subtraction signs
+# to division signs. For example, if you had the expression 4 + 6 - 2
+# and you threw the switch, it would change to 4 * 6 / 2.
+#
+# is it possible to find more expressions 1 _ 2 _ 3 _ ... _ n such that
+# you can put in + and - signs, throw the switch, and the expression
+# remains equal?
+#
+
+#
+# This program prints out all solutions, or the phrase "No solution for N = $N"
+# if there's no solution for such an N.
+#
+
+my $MAX_CHECK = 15;
+my $MIN_CHECK =  2;
+
+N: foreach my $N ($MIN_CHECK .. $MAX_CHECK) {
+    my $size         = $N - 1;
+    my $has_solution = 0;
+    foreach my $n (0 .. 2 ** ($N - 1) - 1) {
+        my $bits  = sprintf "%0${size}b" => $n;
+        my @bits  = split // => $bits;
+        my $expr1 = "1";
+        my $expr2 = "1";
+        for my $d (2 .. $N) {
+            my $bit = shift @bits;
+            $expr1 .= " " . ($bit ? "+" : "-") . " " . $d;
+            $expr2 .= " " . ($bit ? "*" : "/") . " " . $d;
+        }
+        #
+        # Round to "%.10f" so we ignore unexact floating point number artifacts
+        #
+        my $val1 = sprintf "%.10f" => eval $expr1;
+        my $val2 = sprintf "%.10f" => eval $expr2;
+        if ($val1 == $val2) {
+            say "$expr1 == $expr2";
+            $has_solution ++;
+        }
+    }
+    say "No solution for N = $N" unless $has_solution;
+}
+
+__END__
