@@ -89,7 +89,6 @@ for (my $N = 2; $N <= $max_check; $N ++) {
     }
 }
 
-my @primes = sort {$a <=> $b} keys %primes;
 
 #
 # Prime factors for all factorials
