@@ -23,22 +23,132 @@ no  warnings 'syntax';
 # This program prints out all solutions, or the phrase "No solution for N = $N"
 # if there's no solution for such an N.
 #
+#
+# Options:
+#    --search-type:   0  Uses 1 .. N (default)
+#                     1  Eliminates primes
+#                     2  Eliminates primes whose highest power which divides
+#                        N! is odd
+#    --min            Minimum N to search for (default: 2)
+#    --max            Maximum N to search for (default: 25)
+#
+# This program is at the mercy of the underlaying architecture (be it
+# software, or hardware). No attempt is made to high precision arithmetic.
+# Intermediate results may be floating point numbers, or they may exceed
+# MAX_INT, losing precision. (But we don't calculate N!).
+#
+# Use of Math::BigInt, Math::BigRat or Math::BigFloat may help, but this
+# may slow down things dramatically.
+#
 
-my $MAX_CHECK = 15;
-my $MIN_CHECK =  2;
+use Getopt::Long;
 
-N: foreach my $N ($MIN_CHECK .. $MAX_CHECK) {
-    my $size         = $N - 1;
+my $MAX_CHECK   = 25;
+my $MIN_CHECK   =  2;
+
+my $ALL_NUMBERS =  0;
+my $NO_PRIMES   =  1;
+my $NO_PRIMES2  =  2;
+
+GetOptions  ('search-type=i'    =>  \(my $search_type = $ALL_NUMBERS),
+             'min=i'            =>  \(my $min_check   = $MIN_CHECK),
+             'max=i'            =>  \(my $max_check   = $MAX_CHECK),
+);
+
+$| = 1;
+
+#
+# Find the prime factors of each numbers. This allows us to find primes
+# (number of factors == 1), and the prime factors of the factorials
+# (sum of all the prime factors of the number, and all numbers below).
+# 0 and 1 are assumed to have no prime factors.
+#
+my @Factors = ([], []);
+my %primes;
+for (my $N = 2; $N <= $max_check; $N ++) {
+    my $n = $N;
+    #
+    # Use a very trivial algorithm to determine factors. The assumption is
+    # that the numbers we're checking are small. It's not costly then.
+    #
+    my @factors = ();
+    while ($n % 2 == 0) {
+        $n /= 2;
+        push @factors => 2;
+    }
+    for (my $f = 3; $f * $f <= $n; $f += 2) {
+        while ($n % $f == 0) {
+            push @factors => $f;
+            $n /= $f;
+        }
+    }
+    push @factors => $n if $n > 1;
+    $Factors [$N] = \@factors;
+    if (@factors == 1) {
+        $primes {$N} = 1;
+    }
+}
+
+my @primes = sort {$a <=> $b} keys %primes;
+
+#
+# Prime factors for all factorials
+#
+my @fac_factors = ({ }, { });
+for (my $i = 2; $i < @Factors; $i ++) {
+    my %set = %{$fac_factors [$i - 1]};
+    $set {$_} ++ for @{$Factors [$i]};
+    $fac_factors [$i] = \%set;
+}
+
+
+#
+# Return the set of numbers to search in, depending on the search type.
+# $N is the *maximum* number in the set.
+#
+sub numbers {
+    my $N = shift;
+    my @set;
+    if ($search_type == 0) {
+        @set = (1 .. $N);
+    }
+    elsif ($search_type == $NO_PRIMES) {
+        @set = grep {!$primes {$_}} 1 .. $N;
+    }
+    elsif ($search_type == $NO_PRIMES2) {
+        @set = (1);
+        for (my $n = 2; $n <= $N; $n ++) {
+            if ($primes {$n}) {
+                my $k = $fac_factors [$N] {$n};
+                if ($k % 2) {
+                    next;
+                }
+            }
+            push @set => $n;
+        }
+    }
+    return @set;
+}
+
+
+N: foreach my $N ($min_check .. $max_check) {
+    say "N = $N:";
+    my @numbers      = numbers ($N);
+    if ($numbers [-1] != $N) {
+        say "  $N is eliminated; skipping";
+        next N;
+    }
+    my $size         = @numbers - 1;
     my $has_solution = 0;
-    foreach my $n (0 .. 2 ** ($N - 1) - 1) {
+    foreach my $n (0 .. 2 ** $size - 1) {
         my $bits  = sprintf "%0${size}b" => $n;
         my @bits  = split // => $bits;
-        my $expr1 = "1";
-        my $expr2 = "1";
-        for my $d (2 .. $N) {
+        my $expr1 = $numbers [0];
+        my $expr2 = $numbers [0];
+        for my $d (1 .. $size) {
             my $bit = shift @bits;
-            $expr1 .= " " . ($bit ? "+" : "-") . " " . $d;
-            $expr2 .= " " . ($bit ? "*" : "/") . " " . $d;
+            $expr1 .= " " . ($bit ? "+" : "-") . " " . $numbers [$d];
+            $expr2 .= " " . ($bit ? "*" : "/") . " " . $numbers [$d];
         }
         #
         # Round to "%.10f" so we ignore unexact floating point number artifacts
@@ -46,11 +156,11 @@ N: foreach my $N ($MIN_CHECK .. $MAX_CHECK) {
         my $val1 = sprintf "%.10f" => eval $expr1;
         my $val2 = sprintf "%.10f" => eval $expr2;
         if ($val1 == $val2) {
-            say "$expr1 == $expr2";
+            say "  $expr1 == $expr2";
             $has_solution ++;
         }
     }
-    say "No solution for N = $N" unless $has_solution;
+    say "  No solution" unless $has_solution;
 }
 
 __END__
