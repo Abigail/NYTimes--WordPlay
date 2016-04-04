@@ -1,0 +1,65 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+# 
+# Consider a list of all the ways you could take four distinct digits
+# from 1 to 9 and arrange them to make the sum of two 2-digit numbers.
+# Some numbers might appear several times: 134, for example, is 93 +
+# 41, and also 91 + 43.
+# 
+# What are the mean, median and mode of all the numbers on this list?
+# (Mean is the sum of all the numbers divided by the number of numbers,
+# median is the middle value in a sorted list of the numbers, and the
+# mode is the number that appears most often.)
+# 
+
+my @sums;
+foreach my $d1 (1 .. 9) {
+    foreach my $d2 (1 .. 9) {
+        next if $d2 == $d1;
+        foreach my $d3 (1 .. 9) {
+            next if $d3 == $d2 ||
+                    $d3 == $d1;
+            foreach my $d4 (1 .. 9) {
+                next if $d4 == $d3 ||
+                        $d4 == $d2 ||
+                        $d4 == $d1;
+                push @sums => eval "$d1$d2 + $d3$d4";
+            }
+        }
+    }
+}
+
+@sums = sort {$a <=> $b} @sums;
+
+my $Sum  = 0;
+   $Sum += $_ for @sums;
+my $mean = $Sum / @sums;
+
+my $median;
+if (@sums % 2) {  # Odd number of elements
+    $median = $sums [(@sums - 1) / 2];
+}
+else {            # Even number of elements
+    $median = ($sums [@sums / 2] + $sums [@sums / 2 - 1]) / 2;
+}
+
+my %count;
+   $count {$_} ++ for @sums;
+my $max = 0;
+foreach my $v (values %count) {
+    $max = $v if $max < $v;
+}
+my @modes = sort {$a <=> $b} grep {$count {$_} == $max} keys %count;
+
+
+say "Mean: $mean";
+say "Median: $median";
+say "Modes: @modes";
+
+__END__
