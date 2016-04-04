@@ -18,6 +18,12 @@ no  warnings 'syntax';
 # mode is the number that appears most often.)
 # 
 
+#
+# We'll use an exhaustive search, iterating four digits from 1 .. 9,
+# excluding duplicates. We do *not* want to consider "ab + cd" and "cd + ab"
+# as two distinct possibilities, and prevent that by requiring a < c.
+#
+
 my @sums;
 foreach my $d1 (1 .. 9) {
     foreach my $d2 (1 .. 9) {
@@ -25,6 +31,7 @@ foreach my $d1 (1 .. 9) {
         foreach my $d3 (1 .. 9) {
             next if $d3 == $d2 ||
                     $d3 == $d1;
+            next unless $d1 < $d3;
             foreach my $d4 (1 .. 9) {
                 next if $d4 == $d3 ||
                         $d4 == $d2 ||
