@@ -23,6 +23,8 @@ use feature 'current_sub';
 # 
 
 
+my $MAX_VALUE = 10;
+
 
 #
 # Given a size, and a set, return all subsets of said size.
@@ -57,18 +59,19 @@ sub all_sums {
 }
 
 #
-# All possible sets of 4 different coins, valued between 1 and 10, inclusive.
+# All possible sets of 4 different coins, valued between 1 and $MAX_VALUE,
+# inclusive.
 #
-my @sets = all_subsets (4, 1 .. 10);
+my @sets = all_subsets (4, 1 .. $MAX_VALUE);
 
 #
 # Find the sets where 1 to 10 can be made with at most 2 coins.
 #
 foreach my $set (@sets) {
     my @sums = all_sums (@$set);
-    # Since the sums are ordered, just look for set with at least 10
-    # different sums, of which the 10th sum equals 10.
-    if (@sums >= 10 && $sums [9] == 10) {
+    # Since the sums are ordered, just look for set with at least $MAX_VALUE
+    # different sums, of which the $MAX_VALUEth sum equals $MAX_VALUE.
+    if (@sums >= $MAX_VALUE && $sums [$MAX_VALUE - 1] == $MAX_VALUE) {
         say "@$set";
     }
 }
