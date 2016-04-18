@@ -1,0 +1,77 @@
+#!/opt/perl/bin/perl
+
+use 5.016;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use feature 'current_sub';
+
+#
+# You're creating a new coin system for your country. You must use
+# only four coin values and you must be able to create the values 1
+# through 10 using one coin at a minimum and two coins maximum.
+#
+# After you create a successful coin system for your country, the
+# neighboring countries ask you to do the same for them, but to please
+# not repeat the same coin system for any of them.
+# 
+# What are the other unique coin systems that you can create?
+# 
+# For how many countries can you create a unique coin system with four coins?
+# 
+
+
+
+#
+# Given a size, and a set, return all subsets of said size.
+#
+sub all_subsets {
+    my ($size, @set) = @_;
+
+    return if $size <= 0;
+    return if @set  < $size;
+    return map {[$_]} @set if $size == 1;
+
+    my $first = shift @set;
+
+    return map ({[$first, @$_]} &{+__SUB__} ($size - 1, @set)),
+                                &{+__SUB__} ($size,     @set);
+}
+
+#
+# Return all the possible sums of a given set, using one or two numbers.
+#
+sub all_sums {
+    my @set = @_;
+
+    my %seen = map {$_ => 1} @set;
+    for (my $i = 0; $i < @set; $i ++) {
+        for (my $j = $i; $j < @set; $j ++) {
+            $seen {$set [$i] + $set [$j]} = 1;
+        }
+    }
+
+    sort {$a <=> $b} keys %seen;
+}
+
+#
+# All possible sets of 4 different coins, valued between 1 and 10, inclusive.
+#
+my @sets = all_subsets (4, 1 .. 10);
+
+#
+# Find the sets where 1 to 10 can be made with at most 2 coins.
+#
+foreach my $set (@sets) {
+    my @sums = all_sums (@$set);
+    # Since the sums are ordered, just look for set with at least 10
+    # different sums, of which the 10th sum equals 10.
+    if (@sums >= 10 && $sums [9] == 10) {
+        say "@$set";
+    }
+}
+
+
+__END__
