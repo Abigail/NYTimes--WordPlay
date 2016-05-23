@@ -11,7 +11,8 @@ no  warnings 'syntax';
 # N (distinct) powers of N.
 #
 
-my $TARGET = 50;
+my $TARGET   = 50;
+my $distinct =  1;
 
 SIZE:
   for my $size (2 .. 9) {
@@ -22,7 +23,8 @@ SIZE:
       for (my $n = $from; $n <= $to; $n ++) {
           my @digits = split // => sprintf "%0${size}d" => $n;
           for (my $i = 1; $i < @digits; $i ++) {
-              next NUMBER if $digits [$i - 1] < $digits [$i];
+              next NUMBER if $distinct ? $digits [$i - 1] <  $digits [$i]
+                                       : $digits [$i - 1] <= $digits [$i];
           }
           if (++ $c == $TARGET) {
               my @chunks = map {"$size^$_"} @digits;
