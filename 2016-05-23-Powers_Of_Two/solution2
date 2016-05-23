@@ -1,0 +1,35 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+#
+# What is the 50th number that is the sum of two distinct powers of two?
+#
+
+#
+# For n = 1 .., m = 0 .. n - 1, calculate 2^n + 2^m. The 50th is our number.
+#
+
+my $c = 0;
+my $TARGET = 50;
+my $sum;
+
+my $power1 = 1;
+OUTER:
+for (my $n = 1; ; $n ++) {
+    $power1 <<= 1;
+    my $power2 = 1;
+    for (my $m = 0; $m < $n; $m ++) {
+        $sum = $power1 + $power2;
+        $power2 <<= 1;
+        last OUTER if ++ $c >= $TARGET;
+    }
+}
+
+say $sum;
+
+__END__
