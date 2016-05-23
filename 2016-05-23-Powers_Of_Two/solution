@@ -1,0 +1,32 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+#
+# What is the 50th number that is the sum of two distinct powers of two?
+#
+
+#
+# This is equivalent with finding the 50th number which uses exactly
+# two 1's when written down in binary.
+#
+
+my $i = 0;  # Numbers to try
+my $c = 0;  # Count of seen numbers which are the sum of 2 distinct powers of 2
+
+my $TARGET = 50;
+
+while (1) {
+    $i ++;
+    my $b = sprintf "%b" => $i;   # Convert to binary
+    $c ++ if $b =~ /^0*10*10*$/;  # Match if two 1's.
+    last if $c == $TARGET;
+}
+
+say $i;
+
+__END__
