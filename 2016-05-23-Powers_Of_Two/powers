@@ -1,0 +1,40 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+#
+# Calculate the 50th number which can be expressed as the sum of
+# N (distinct) powers of N.
+#
+
+my $TARGET = 50;
+
+SIZE:
+  for my $size (2 .. 9) {
+      my $from = "0" x $size;
+      my $to   = "9" x $size;
+      my $c    = 0;
+    NUMBER:
+      for (my $n = $from; $n <= $to; $n ++) {
+          my @digits = split // => sprintf "%0${size}d" => $n;
+          for (my $i = 1; $i < @digits; $i ++) {
+              next NUMBER if $digits [$i - 1] < $digits [$i];
+          }
+          if (++ $c == $TARGET) {
+              my @chunks = map {"$size^$_"} @digits;
+              my $sum  = 0;
+                 $sum += $size ** $_ for @digits;
+              local $" = " + ";
+              say "@chunks == $sum";
+              next SIZE;
+          }
+      }
+  }
+               
+
+
+__END__
