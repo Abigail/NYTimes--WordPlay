@@ -1,41 +1,99 @@
 #!/opt/perl/bin/perl
 
+#
+# Calculate the Nth number which is the sum of M (distinct) powers 
+# of some number B.
+#
+
+#
+# Options:
+#   --count N   Nth number (default: 50)
+#   --base  B   Number to take powers of (default: 2)
+#   --terms M   Number of powers to sum (default: same as base)
+#   --distinct  If given, all the powers need to be distinct
+#
+
 use 5.010;
 
 use strict;
 use warnings;
 no  warnings 'syntax';
 
-#
-# Calculate the 50th number which can be expressed as the sum of
-# N (distinct) powers of N.
-#
+use feature  'signatures';
+no  warnings 'experimental::signatures';
 
-my $TARGET   = 50;
-my $distinct =  1;
+use Getopt::Long;
+use Math::BigInt;
 
-SIZE:
-  for my $size (2 .. 9) {
-      my $from = "0" x $size;
-      my $to   = "9" x $size;
-      my $c    = 0;
-    NUMBER:
-      for (my $n = $from; $n <= $to; $n ++) {
-          my @digits = split // => sprintf "%0${size}d" => $n;
-          for (my $i = 1; $i < @digits; $i ++) {
-              next NUMBER if $distinct ? $digits [$i - 1] <  $digits [$i]
-                                       : $digits [$i - 1] <= $digits [$i];
-          }
-          if (++ $c == $TARGET) {
-              my @chunks = map {"$size^$_"} @digits;
-              my $sum  = 0;
-                 $sum += $size ** $_ for @digits;
-              local $" = " + ";
-              say "@chunks == $sum";
-              next SIZE;
-          }
-      }
-  }
+my $DEF_COUNT = 50;
+my $DEF_BASE  =  2;
+
+GetOptions 'count=i'                    =>  \(my $count = $DEF_COUNT),
+           'base=i'                     =>  \(my $base  = $DEF_BASE),
+           'terms|addends|summands=i'   =>  \(my $terms),
+           'distinct'                   =>  \(my $distinct),
+           or die "Failed to parse option\n";
+
+$count = $DEF_COUNT if            $count <  1;
+$base  = $DEF_BASE  if            $base  <= 1;
+$terms = $base      if !$terms || $terms <  1;
+
+package Counter {
+    use Hash::Util::FieldHash qw 'fieldhash';
+
+    fieldhash my %counter;
+    fieldhash my %distinct;
+
+    sub new ($class) {bless \do {my $var} => $class}
+    sub init ($self, $terms, $distinct) {
+        $distinct {$self} = $distinct ? 1 : 0;
+        $counter  {$self} = $distinct ? [ 0 .. $terms - 1]
+                                      : [(0) x $terms];
+        $self;
+    }
+
+    sub out ($self) {
+        @{$counter {$self}};
+    }
+
+    sub tick ($self) {
+        my $counter = $counter {$self};
+
+        #
+        # Find the first value which can be updated
+        #
+        my $i = 0;
+        for (; $i < @$counter - 1; $i ++) {
+            last if $$counter [$i] < $$counter [$i + 1] - $distinct {$self};
+        }
+
+        #
+        # Increment position $i
+        #
+        $$counter [$i] ++;
+
+        #
+        # Reset what comes before
+        #
+        if ($i) {
+            @$counter [0 .. ($i - 1)] = $distinct {$self} ? (0 .. $i - 1)
+                                                          : (0) x $i;
+        }
+    }
+};
+
+
+my $c = Counter:: -> new -> init ($terms, $distinct);
+
+$c -> tick for 2 .. $count;
+
+my @chunks = map {"$base^$_"} reverse $c -> out;
+my $sum    = 0;
+   $sum   += $base ** $_ for  map {Math::BigInt -> new ($_)}
+                              reverse $c -> out;
+
+local $" = " + ";
+say "@chunks == $sum";
                
 
 
