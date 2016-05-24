@@ -89,7 +89,7 @@ $c -> tick for 2 .. $count;
 
 my @chunks = map {"$base^$_"} reverse $c -> out;
 my $sum    = 0;
-   $sum   += $base ** $_ for  map {Math::BigInt -> new ($_)}
+   $sum   += $base ** $_ for  map {Math::BigInt:: -> new ($_)}
                               reverse $c -> out;
 
 local $" = " + ";
