@@ -35,7 +35,7 @@ GetOptions 'count=i'                    =>  \(my $count = $DEF_COUNT),
            'base=i'                     =>  \(my $base  = $DEF_BASE),
            'terms|addends|summands=i'   =>  \(my $terms),
            'distinct'                   =>  \(my $distinct),
-           or die "Failed to parse option\n";
+           or die "Failed to parse options\n";
 
 $count = $DEF_COUNT if            $count <  1;
 $base  = $DEF_BASE  if            $base  <= 1;
