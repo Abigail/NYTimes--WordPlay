@@ -12,6 +12,9 @@
 #   --terms M   Number of powers to sum (default: same as base)
 #   --distinct  If given, all the powers need to be distinct
 #
+# To get the answer to the original problem, use the options
+#   --count 50 --base 2 --distinct
+#
 
 use 5.010;
 
