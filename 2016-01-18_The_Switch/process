@@ -1,0 +1,37 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+open my $fh, "<", "output" or die;
+
+my @lines = <$fh>;
+my $N = 0;
+my $count;
+my $solution;
+foreach my $line (@lines) {
+    chomp $line;
+    if ($line =~ /^N\s*=\s*([0-9]+)/) {
+        my $new_N = $1;
+        if ($count) {
+            say "(N = $N; $count sol) $solution";
+        }
+        $N = $new_N;
+        $count = 0;
+        next;
+    }
+    if ($line =~ /eliminated/ || $line =~ /no solution/i) {
+        $N = 0;
+        next;
+    }
+    $count ++;
+    if ($count == 1) {
+        $solution = $line;
+    }
+}
+
+
+__END__
