@@ -90,10 +90,9 @@ my $c = Counter:: -> new -> init ($terms, $distinct);
 
 $c -> tick for 2 .. $count;
 
-my @chunks = map {"$base^$_"} reverse $c -> out;
+my @chunks = map {"$base^$_"}                          reverse $c -> out;
 my $sum    = 0;
-   $sum   += $base ** $_ for  map {Math::BigInt:: -> new ($_)}
-                                      $c -> out;
+   $sum   += $base ** $_ for  map {Math::BigInt:: -> new ($_)} $c -> out;
 
 local $" = " + ";
 say "@chunks == $sum";
