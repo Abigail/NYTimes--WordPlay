@@ -1,0 +1,110 @@
+#!/opt/perl/bin/perl
+
+use 5.010;
+
+use strict;
+use warnings;
+no  warnings 'syntax';
+
+use bigint;
+
+use Getopt::Long;
+
+#
+# Original question:
+#
+# When they get to Oddville Hotel, the receptionist tells them that
+# their room number is 10 digits long and uses each digit of 0 through
+# 9 exactly once. Furthermore, reading from left to right, the first
+# digit is divisible by 1, the first two digits are divisible by 2,
+# the first three digits are divisible by 3, etc. What is their room
+# number?
+#
+# This program calculates this for different bases
+#
+# Small bases (including base 10) will be very fast, but then it quickly
+# becomes slower. Above base 20 takes a really long time. Considering the
+# brute force approach which is bounded by N^N, this is to be expected.
+#
+# Options:  --base  base:  Base to calculate 
+#           --start base:  Start with this base, then increment base
+#           --end   base:  End with this base
+#
+# If no option is given, we calculate the answer for base 10.
+#
+
+GetOptions  ("start=i"   =>  \my $start,
+             "end=i"     =>  \my $end,
+             "base=i"    =>  \my $base,);
+
+$| = 1;
+
+if ($base) {
+    $start = $base;
+    $end   = $base;
+}
+elsif (!$start) {
+    $start = 10;
+    if (!$end) {
+        $end = 10;
+    }
+}
+
+
+sub find_candidates {
+    my ($value, $representation, $seen, $base) = @_;
+
+    my @candidates = ();
+
+    $value *= $base;
+
+    my $n = length ($representation) + 1;
+
+    foreach my $try (grep {!$$seen {$_}} 0 .. ($base - 1)) {
+        my $new_value = $value + $try;
+        next if $new_value % $n;
+        my $new_seen = {%$seen, $try => 1};
+        if ($try >= 10) {
+            $try = chr ($try + ord ('A') - 10);
+        }
+        push @candidates => [$new_value, $representation . $try,
+                                         $new_seen];
+    }
+
+    return @candidates;
+}
+
+
+sub handle_base {
+    my $base = shift;
+
+    my @valid_prefix = ([0, "", {}]);
+
+    foreach my $n (1 .. $base) {
+        my @new_prefix;
+        foreach my $valid (@valid_prefix) {
+            push @new_prefix => find_candidates (@$valid, $base);
+        }
+        @valid_prefix = @new_prefix;
+        last unless @valid_prefix;
+    }
+
+    return map {$$_ [1]} @valid_prefix;
+}
+
+
+for (my $base = $start; !$end || $base <= $end; $base ++) {
+    my @answers = handle_base ($base);
+
+    if (@answers) {
+        local $" = ", ";
+        printf "Base %d has %d solutions: @answers\n" => $base, scalar @answers;
+    }
+    else {
+        printf "Base %d has no solutions\n" => $base;
+    }
+}
+
+
+
+__END__
